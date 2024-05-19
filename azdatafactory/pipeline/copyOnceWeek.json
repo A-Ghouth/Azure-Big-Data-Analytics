@@ -1,0 +1,326 @@
+{
+	"name": "copyOnceWeek",
+	"properties": {
+		"description": "Copy PostTypes and Users tables from RDS PostgreSQL DB once a week",
+		"activities": [
+			{
+				"name": "Retry Copy Users",
+				"description": "Executes a set of activities in a loop to reattempt copying data for a specific duration.",
+				"type": "Until",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@variables('UserFileCopied')",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "Users Conditional Action",
+							"description": "Make an action depending on post files existence",
+							"type": "IfCondition",
+							"dependsOn": [
+								{
+									"activity": "Copy Users",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"expression": {
+									"value": "@equals(activity('Copy Users').output.filesWritten, 0)",
+									"type": "Expression"
+								},
+								"ifFalseActivities": [
+									{
+										"name": "Set UserFileCopied",
+										"description": "Set the UserFileCopied pipeline variable to true indicating successful copy attempt",
+										"type": "SetVariable",
+										"dependsOn": [],
+										"policy": {
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"variableName": "UserFileCopied",
+											"value": {
+												"value": "@bool(true)",
+												"type": "Expression"
+											}
+										}
+									}
+								],
+								"ifTrueActivities": [
+									{
+										"name": "Users Retry WaitTime",
+										"description": "Set the time till the next copy retry attempt",
+										"type": "Wait",
+										"dependsOn": [],
+										"userProperties": [],
+										"typeProperties": {
+											"waitTimeInSeconds": 1800
+										}
+									}
+								]
+							}
+						},
+						{
+							"name": "Copy Users",
+							"description": "Copy Users from RDS PostgreSQL DB",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "PostgreSqlV2Source"
+								},
+								"sink": {
+									"type": "DelimitedTextSink",
+									"storeSettings": {
+										"type": "AzureBlobStorageWriteSettings"
+									},
+									"formatSettings": {
+										"type": "DelimitedTextWriteSettings",
+										"quoteAllText": true,
+										"fileExtension": ".txt"
+									}
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "ds_Users",
+									"type": "DatasetReference"
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "ds_Users_load_rds_to_myblob",
+									"type": "DatasetReference"
+								}
+							]
+						}
+					],
+					"timeout": "0.01:15:00"
+				}
+			},
+			{
+				"name": "Retry Copy postTypes",
+				"description": "Executes a set of activities in a loop to reattempt copying data for a specific duration.",
+				"type": "Until",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@variables('PostTypeFileCopied')",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "PostTypes Conditional Action",
+							"description": "Make an action depending on post files existence",
+							"type": "IfCondition",
+							"dependsOn": [
+								{
+									"activity": "Copy postTypes",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"expression": {
+									"value": "@equals(activity('Copy postTypes').output.filesWritten, 0)",
+									"type": "Expression"
+								},
+								"ifFalseActivities": [
+									{
+										"name": "Set PostTypeFileCopied",
+										"description": "Set the PostTypeFileCopied pipeline variable to true indicating successful copy attempt",
+										"type": "SetVariable",
+										"dependsOn": [],
+										"policy": {
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"variableName": "PostTypeFileCopied",
+											"value": {
+												"value": "@bool(true)",
+												"type": "Expression"
+											}
+										}
+									}
+								],
+								"ifTrueActivities": [
+									{
+										"name": "PostTypes Retry WaitTime",
+										"description": "Set the time till the next copy retry attempt",
+										"type": "Wait",
+										"dependsOn": [],
+										"userProperties": [],
+										"typeProperties": {
+											"waitTimeInSeconds": 1800
+										}
+									}
+								]
+							}
+						},
+						{
+							"name": "Copy postTypes",
+							"description": "Copy postTypes from RDS PostgreSQL DB",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "PostgreSqlV2Source"
+								},
+								"sink": {
+									"type": "DelimitedTextSink",
+									"storeSettings": {
+										"type": "AzureBlobStorageWriteSettings"
+									},
+									"formatSettings": {
+										"type": "DelimitedTextWriteSettings",
+										"quoteAllText": true,
+										"fileExtension": ".txt"
+									}
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "ds_postTypes",
+									"type": "DatasetReference"
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "ds_postTypes_load_rds_to_myblob",
+									"type": "DatasetReference"
+								}
+							]
+						}
+					],
+					"timeout": "0.01:15:00"
+				}
+			},
+			{
+				"name": "Check User FilesCopied",
+				"description": "Handle User copy failure case",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "Retry Copy Users",
+						"dependencyConditions": [
+							"Completed"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@variables('UserFileCopied')",
+						"type": "Expression"
+					},
+					"ifFalseActivities": [
+						{
+							"name": "Copy Users Files Failure",
+							"description": "A fail activity associated with the status of copying files from source",
+							"type": "Fail",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"message": "User files were not copied from the source",
+								"errorCode": "CopyError"
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "Check PostTypeFilesCopied",
+				"description": "Handle PostType copy failure case",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "Retry Copy postTypes",
+						"dependencyConditions": [
+							"Completed"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@variables('PostTypeFileCopied')",
+						"type": "Expression"
+					},
+					"ifFalseActivities": [
+						{
+							"name": "Copy PostType Files Failure",
+							"description": "A fail activity associated with the status of copying files from source",
+							"type": "Fail",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"message": "PostType files were not copied from the source",
+								"errorCode": "CopyFailure"
+							}
+						}
+					]
+				}
+			}
+		],
+		"variables": {
+			"PostTypeFileCopied": {
+				"type": "Boolean",
+				"defaultValue": false
+			},
+			"UserFileCopied": {
+				"type": "Boolean",
+				"defaultValue": false
+			}
+		},
+		"folder": {
+			"name": "adf-pipeliens"
+		},
+		"annotations": []
+	}
+}
