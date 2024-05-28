@@ -1,4 +1,4 @@
-# WCD Big Data Engineering Capstone Project
+# Azure Big Data Analytics
 
 ## Project Overview
 The objective of this project is to use big data analytics systems to process data and train a machine learning classifier. Daily posts are processed and passed through an ML classifier to predict their tags.
